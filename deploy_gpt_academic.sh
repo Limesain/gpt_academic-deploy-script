@@ -1,6 +1,4 @@
-cat > deploy_gpt_academic.sh <<'EOL'
 #!/bin/bash
-
 echo "正在更新软件包列表并升级系统..."
 sudo apt update && sudo apt upgrade -y --no-install-recommends
 echo "系统更新完成。"
