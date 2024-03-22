@@ -18,7 +18,7 @@ function display_logo() {
     echo -e "${BLUE}项目地址：${NC}https://github.com/binary-husky/gpt_academic"
     echo "---"
     echo "脚本项目地址 https://github.com/Limesain/gpt_academic-deploy-script"
-    echo "当前部署脚本为"${PURPLE}1.0版${NC}" 适用GPT Academi项目版本为"${PURPLE}3.73${NC}" 测试平台为"${PURPLE}ubuntu 20.04${NC}""
+    echo "当前部署脚本为 1.0 适用GPT Academi项目版本为 3.73  测试平台为 ubuntu 20.04"
     echo
 }
 
@@ -598,15 +598,17 @@ function main_menu() {
 function main() {
     display_logo
     check_docker_compose
-    update_system_packages
-    install_docker
-    verify_docker_installation
-    install_docker_compose
-    create_project_directory
-    select_deployment_scheme
-    add_api_key
-    redirect_url
-    start_gpt_academic
+    if [ $? -eq 0 ]; then
+        update_system_packages
+        install_docker
+        verify_docker_installation
+        install_docker_compose
+        create_project_directory
+        select_deployment_scheme
+        add_api_key
+        redirect_url
+        start_gpt_academic
+    fi
     main_menu
 }
 
