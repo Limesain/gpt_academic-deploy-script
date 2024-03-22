@@ -624,14 +624,13 @@ function add_shortcut_command() {
 
     cat >> "$HOME/.bashrc" <<EOL
 gptadmin() {
-    cd "$script_dir/gpt_academic" && bash "$script_path" menu
+    cd "$script_dir" && bash "$script_path" menu
 }
 EOL
 
     source "$HOME/.bashrc"
     echo -e "${GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
 }
-
 
 # 主程序
 function main() {
