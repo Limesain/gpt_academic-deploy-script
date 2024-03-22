@@ -1,3 +1,6 @@
+
+这是我撰写的脚本代码：
+```
 #!/bin/bash
 
 # 定义颜色变量
@@ -15,34 +18,19 @@ function display_logo() {
     echo -e "               GPT Academic Docker 部署脚本"
     echo -e "==========================================================${NC}"
     echo -e "${CYAN}GPT 学术优化 (GPT Academic)${NC}"
-    echo -e "${BLUE}项目地址：${NC}https://github.com/binary-husky/gpt_academic"
+    echo -e "${BLUE}项目地址:${NC}https://github.com/binary-husky/gpt_academic"
     echo "---"
     echo "脚本项目地址 https://github.com/Limesain/gpt_academic-deploy-script"
-    echo "当前部署脚本为 1.0 适用GPT Academi项目版本为 3.73  测试平台为 ubuntu 20.04"
+    echo "当前部署脚本为 1.0 适用GPT Academic项目版本为 3.73  测试平台为 ubuntu 20.04"
     echo
 }
 
-
-# 检查docker-compose.yml文件是否存在
-function check_docker_compose() {
-    if [ -f "docker-compose.yml" ]; then
-        echo -e "${YELLOW}检测到已有的 docker-compose.yml 文件,是否重新部署?${NC}"
-        read -p "请输入 [y/n]: " choice
-        case "$choice" in
-            y|Y )
-                echo -e "${GREEN}重新开始部署...${NC}"
-                return 0
-                ;;
-            n|N )
-                echo -e "${GREEN}跳过部署,直接进入主菜单...${NC}"
-                main_menu
-                exit 0
-                ;;
-            * )
-                echo -e "${RED}无效的选择,退出脚本...${NC}"
-                exit 1
-                ;;
-        esac
+# 检查是否已部署GPT Academic
+function check_existing_deployment() {
+    if docker ps -a --format '{{.Names}}' | grep -Eq "^gpt_academic"; then
+        echo -e "${YELLOW}检测到已有的 GPT Academic 部署,直接进入主菜单...${NC}"
+        main_menu
+        exit 0
     fi
 }
 
@@ -117,11 +105,12 @@ function install_docker_compose() {
     echo
 }
 
-# 创建项目目录
-function create_project_directory() {
+# 创建项目目录并进入
+function create_and_enter_project_directory() {
     echo -e "${BLUE}正在创建项目目录...${NC}"
     mkdir -p gpt_academic
     cd gpt_academic
+    echo -e "${GREEN}已进入项目目录: $(pwd)${NC}"
     echo
 }
 
@@ -263,7 +252,7 @@ services:
       API_KEY: "sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx,sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
       USE_PROXY: "False"
       LLM_MODEL: "gpt-3.5-turbo-0125"
-      AVAIL_LLM_MODELS: '["gpt-4-0125-preview", "gpt-4-turbo-preview", "gpt-4-vision-preview", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-16k", "gpt-3.5-turbo", "azure-gpt-3.5", "gpt-4", "gpt-4-32k", "azure-gpt-4", "glm-4", "glm-3-turbo", "gemini-pro", "chatglm3", "one-api-claude-3-sonnet-20240229(max_token=100000)", "moss", "qwen-turbo", "qwen-plus", "qwen-max", "zhipuai", "qianfan", "deepseekcoder", "llama2", "qwen-local", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k-0613",  "gpt-3.5-random", "api2d-gpt-3.5-turbo", "api2d-gpt-3.5-turbo-16k", "spark", "sparkv2", "sparkv3", "chatglm_onnx", "claude-1-100k", "claude-2", "internlm", "jittorllms_pangualpha", "jittorllms_llama"]'
+      AVAIL_LLM_MODELS: '["gpt4-0125-preview", "gpt-4-turbo-preview", "gpt-4-vision-preview", "gpt-3.5-turbo-0125", "gpt-3.5-turbo-16k", "gpt-3.5-turbo", "azure-gpt-3.5", "gpt-4", "gpt-4-32k", "azure-gpt-4", "glm-4", "glm-3-turbo", "gemini-pro", "chatglm3", "one-api-claude-3-sonnet-20240229(max_token=100000)", "moss", "qwen-turbo", "qwen-plus", "qwen-max", "zhipuai", "qianfan", "deepseekcoder", "llama2", "qwen-local", "gpt-3.5-turbo-0613", "gpt-3.5-turbo-16k-0613",  "gpt-3.5-random", "api2d-gpt-3.5-turbo", "api2d-gpt-3.5-turbo-16k", "spark", "sparkv2", "sparkv3", "chatglm_onnx", "claude-1-100k", "claude-2", "internlm", "jittorllms_pangualpha", "jittorllms_llama"]'
       LOCAL_MODEL_DEVICE: "cuda"
       QWEN_LOCAL_MODEL_SELECTION: "Qwen/Qwen-1_8B-Chat-Int8"
     runtime: nvidia
@@ -368,9 +357,13 @@ function check_container_status() {
 
 # 查看运行日志
 function view_logs() {
-    local container_name=$(docker-compose ps --services)
-    echo -e "${BLUE}正在查看 $container_name 的运行日志,按 Ctrl+C 退出...${NC}"
-    docker-compose logs -f --tail 100 $container_name
+    echo -e "${BLUE}正在查看 GPT Academic 的运行日志,按 Ctrl+C 退出...${NC}"
+    echo -e "${YELLOW}注意: 如果日志显示不完整,请尝试调整终端窗口大小。${NC}"
+    echo -e "${CYAN}========== GPT Academic 运行日志 ==========${NC}"
+    docker-compose logs -f --tail 100
+    echo -e "${CYAN}========== 日志查看结束 ==========${NC}"
+    echo -e "${BLUE}按任意键返回主菜单...${NC}"
+    read -n 1
     echo
 }
 
@@ -597,13 +590,13 @@ function main_menu() {
 # 主程序
 function main() {
     display_logo
+    create_and_enter_project_directory
     check_docker_compose
     if [ $? -eq 0 ]; then
         update_system_packages
         install_docker
         verify_docker_installation
         install_docker_compose
-        create_project_directory
         select_deployment_scheme
         add_api_key
         redirect_url
@@ -615,6 +608,9 @@ function main() {
 main
 
 # 添加快捷命令
-echo 'alias gptadmin="cd $(pwd) && bash gpt_academic_admin.sh"' >> ~/.bashrc
+script_path=$(realpath "$0")
+script_dir=$(dirname "$script_path")
+echo "alias gptadmin='cd $script_dir/gpt_academic && bash $script_path'" >> ~/.bashrc
 source ~/.bashrc
 echo -e "${GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
+```
