@@ -1,93 +1,96 @@
 #!/bin/bash
 
-echo "欢迎使用GPT Academic一键部署脚本!"
+# 显示欢迎信息
+echo "=========================================================="
+echo "GPT Academic Docker部署脚本"
+echo "=========================================================="
+
+# 获取用户的部署确认
 read -p "是否开始部署? (Y/N): " start_choice
+echo
 
 if [[ ! $start_choice =~ ^[Yy]$ ]]; then
     echo "部署已取消,脚本终止。"
     exit 0
 fi
 
+# 更新系统软件包
 echo "请选择更新软件包的方式:"
 echo "1. 仅更新软件包列表"
 echo "2. 更新软件包列表并升级系统软件包"
 echo "3. 更新软件包列表并升级所有软件包"
+echo
 
 read -p "请输入选项编号 (1-3): " update_choice
 
 case $update_choice in
-  1)
-    echo "正在更新软件包列表..."
-    sudo apt update
-    ;;
-  2)
-    echo "正在更新软件包列表并升级系统软件包..."
-    sudo apt update && sudo apt upgrade -y --no-install-recommends
-    ;;
-  3)
-    echo "正在更新软件包列表并升级所有软件包..."
-    sudo apt update && sudo apt upgrade -y
-    ;;
-  *)
-    echo "无效的选择,将继续执行脚本。"
-    ;;
+    1)
+        echo "正在更新软件包列表..."
+        sudo apt update
+        ;;
+    2)
+        echo "正在更新软件包列表并升级系统软件包..."
+        sudo apt update && sudo apt upgrade -y --no-install-recommends
+        ;;
+    3)
+        echo "正在更新软件包列表并升级所有软件包..."
+        sudo apt update && sudo apt upgrade -y
+        ;;
+    *)
+        echo "无效的选择,将继续执行脚本。"
+        ;;
 esac
 
 echo "系统更新完成。"
+echo
 
-echo "正在安装Docker依赖项..."
+# 安装 Docker 及其依赖项
+echo "正在安装 Docker 及其依赖项..."
 sudo apt install apt-transport-https ca-certificates curl gnupg lsb-release -y
-echo "Docker依赖项安装完成。"
-
-echo "正在添加Docker GPG密钥..."
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "Docker GPG密钥添加完成。"
-
-echo "正在添加Docker稳定版仓库..."
 echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-echo "Docker稳定版仓库添加完成。"
-
-echo "正在安装Docker..."
 sudo apt update
 sudo apt install docker-ce docker-ce-cli containerd.io -y
-echo "Docker安装完成。"
 
-echo "正在验证Docker安装..."
+# 验证 Docker 安装
+echo "正在验证 Docker 安装..."
 if sudo systemctl is-active docker >/dev/null 2>&1; then
-    echo "Docker安装成功并正在运行。"
+    echo "Docker 安装成功并正在运行。"
 else
-    echo "Docker安装似乎出现了问题,它目前未在运行。"
+    echo "Docker 安装似乎出现了问题,它目前未在运行。"
     echo "请检查上述步骤的输出,以查找并解决问题。"
     exit 1
 fi
+echo
 
-echo "正在安装Docker Compose..."
+# 安装 Docker Compose
+echo "正在安装 Docker Compose..."
 sudo apt install docker-compose -y
-echo "Docker Compose安装完成。"
-
-echo "正在验证Docker Compose版本..."
 docker-compose --version
-echo "Docker Compose验证完成。"
+echo
 
+# 创建项目目录
 echo "正在创建项目目录..."
 mkdir -p gpt_academic
 cd gpt_academic
-echo "项目目录创建完成。"
+echo
 
+# 选择部署方案
 echo "请选择您想要部署的方案:"
-echo "0. 部署项目的全部能力（包含cuda和latex的大型镜像）"
-echo "1. 如果不需要运行本地模型（仅 chatgpt, azure, 星火, 千帆, claude 等在线大模型服务）"
-echo "2. 如果需要运行ChatGLM + Qwen + MOSS等本地模型"
-echo "3. 如果需要运行ChatGPT + LLAMA + 盘古 + RWKV本地模型"
-echo "4. ChatGPT + Latex"
-echo "5. ChatGPT + 语音助手"
+echo "1. 部署chatgpt,azure,星火,千帆,claude等在线大模型方案(默认方案)"
+echo "2. 部署ChatGLM + Qwen + MOSS 等本地模型方案"
+echo "3. 部署ChatGPT + LLAMA + 盘古 + RWKV 本地模型方案"
+echo "4. 部署ChatGPT + Latex方案"
+echo "5. 部署ChatGPT + 语音助手方案"
+echo "0. 部署项目的全部能力（包含cuda和latex的大型镜像）方案"
+echo
 
 while true; do
     read -p "请输入方案编号 (0-5): " scheme_choice
     case $scheme_choice in
-      0)
-        image="ghcr.io/binary-husky/gpt_academic_with_all_capacity:master"
-        cat > docker-compose.yml <<EOL
+        0)
+            image="ghcr.io/binary-husky/gpt_academic_with_all_capacity:master"
+            cat > docker-compose.yml <<EOL
 version: '3'
 services:
   gpt_academic_full_capability:
@@ -161,11 +164,11 @@ services:
     devices:
       - /dev/nvidia0:/dev/nvidia0
 EOL
-        break
-        ;;
-      1)
-        image="ghcr.io/binary-husky/gpt_academic_nolocal:master"
-        cat > docker-compose.yml <<EOL
+            break
+            ;;
+        1)
+            image="ghcr.io/binary-husky/gpt_academic_nolocal:master"
+            cat > docker-compose.yml <<EOL
 version: '3'
 services:
   gpt_academic:
@@ -181,11 +184,11 @@ services:
     network_mode: "host"
     command: bash -c "python3 -u main.py"
 EOL
-        break
-        ;;
-      2)
-        image="ghcr.io/binary-husky/gpt_academic_chatglm_moss:master"
-        cat > docker-compose.yml <<EOL
+            break
+            ;;
+        2)
+            image="ghcr.io/binary-husky/gpt_academic_chatglm_moss:master"
+            cat > docker-compose.yml <<EOL
 version: '3'
 services:
   gpt_academic_with_chatglm:
@@ -201,11 +204,11 @@ services:
     devices:
       - /dev/nvidia0:/dev/nvidia0
 EOL
-        break
-        ;;
-      3)
-        image="ghcr.io/binary-husky/gpt_academic_jittorllms:master"
-        cat > docker-compose.yml <<EOL
+            break
+            ;;
+        3)
+            image="ghcr.io/binary-husky/gpt_academic_jittorllms:master"
+            cat > docker-compose.yml <<EOL
 version: '3'
 services:
   gpt_academic_with_rwkv:
@@ -221,11 +224,11 @@ services:
     devices:
       - /dev/nvidia0:/dev/nvidia0
 EOL
-        break
-        ;;
-      4)
-        image="ghcr.io/binary-husky/gpt_academic_with_latex:master"
-        cat > docker-compose.yml <<EOL
+            break
+            ;;
+        4)
+            image="ghcr.io/binary-husky/gpt_academic_with_latex:master"
+            cat > docker-compose.yml <<EOL
 version: '3'
 services:
   gpt_academic_with_latex:
@@ -238,11 +241,11 @@ services:
     network_mode: "host"
     command: bash -c "python3 -u main.py"
 EOL
-        break
-        ;;
-      5)
-        image="ghcr.io/binary-husky/gpt_academic_audio_assistant:master"
-        cat > docker-compose.yml <<EOL
+            break
+            ;;
+        5)
+            image="ghcr.io/binary-husky/gpt_academic_audio_assistant:master"
+            cat > docker-compose.yml <<EOL
 version: '3'
 services:
   gpt_academic_with_audio:
@@ -258,21 +261,136 @@ services:
     network_mode: "host"
     command: bash -c "python3 -u main.py"
 EOL
-        break
-        ;;
-      *)
-        echo "无效的选择。请输入 0 到 5 之间的数字。"
-        ;;
+            break
+            ;;
+        *)
+            echo "无效的选择。请输入 0 到 5 之间的数字。"
+            ;;
     esac
 done
 
-echo "docker-compose.yml文件创建完成。"
+echo "docker-compose.yml 文件创建完成。"
+echo
 
-echo "正在启动GPT Academic项目..."
+# 启动 GPT Academic
+echo "正在启动 GPT Academic..."
 docker-compose up -d
-echo "GPT Academic项目已启动。"
+echo "GPT Academic 已启动。"
+echo
 
+# 检查容器运行状态
 echo "正在检查容器运行状态..."
 docker-compose ps
-docker-compose logs
-echo "容器运行状态检查完成。"
+echo
+
+# 查看运行日志功能
+function view_logs() {
+    local rows=$(tput lines)
+    local columns=$(tput cols)
+    local message="按 ESC 键返回主菜单"
+    local message_length=${#message}
+    local message_start=$(((columns - message_length) / 2))
+    
+    tput cup $((rows - 1)) $message_start
+    echo -n "$message"
+    
+    docker-compose logs --no-color gpt_academic | sed 's/^.*gpt_academic_1  | //' &
+    
+    while read -rsn1 key; do
+        if [[ $key == $'\e' ]]; then
+            kill $!
+            break
+        fi
+    done
+    
+    tput cup $((rows - 1)) 0
+    tput el
+    echo ""
+}
+
+# 自定义配置功能
+function custom_config() {
+    echo "请选择要修改的配置:"
+    echo "1. API 密钥"
+    echo "2. 代理设置"
+    echo "3. 使用的 LLM 模型"
+    echo "4. 可用的 LLM 模型列表"
+    echo "5. 返回主菜单"
+    echo
+
+    read -p "请输入选项编号 (1-5): " config_choice
+
+    case $config_choice in
+        1)
+            read -p "请输入新的 API 密钥: " new_api_key
+            sed -i "s/API_KEY:.*/API_KEY: \"$new_api_key\"/g" docker-compose.yml
+            echo "API 密钥已更新。"
+            ;;
+        2)
+            read -p "是否使用代理? (True/False): " use_proxy
+            read -p "请输入代理地址和端口 (例如: socks5h://localhost:11284): " proxy_url
+            sed -i "s/USE_PROXY:.*/USE_PROXY: \"$use_proxy\"/g" docker-compose.yml
+            sed -i "s#PROXIES:.*#PROXIES: '{\"http\": \"$proxy_url\", \"https\": \"$proxy_url\"}'#g" docker-compose.yml
+            echo "代理设置已更新。"
+            ;;
+        3)
+            read -p "请输入要使用的 LLM 模型: " llm_model
+            sed -i "s/LLM_MODEL:.*/LLM_MODEL: \"$llm_model\"/g" docker-compose.yml
+            echo "LLM 模型已更新。"
+            ;;
+        4)
+            read -p "请输入可用的 LLM 模型列表 (用引号和逗号分隔): " llm_models
+            sed -i "s/AVAIL_LLM_MODELS:.*/AVAIL_LLM_MODELS: '$llm_models'/g" docker-compose.yml
+            echo "可用的 LLM 模型列表已更新。"
+            ;;
+        5)
+            return
+            ;;
+        *)
+            echo "无效的选择。请输入 1 到 5 之间的数字。"
+            ;;
+    esac
+
+    custom_config
+}
+
+# 主菜单功能
+function main_menu() {
+    echo "=========================================================="
+    echo "GPT Academic 管理菜单"
+    echo "=========================================================="
+    echo "1. 重新启动 GPT Academic"
+    echo "2. 修改配置"
+    echo "3. 查看运行日志"
+    echo "4. 退出"
+    echo
+
+    read -p "请输入选项编号 (1-4): " menu_choice
+
+    case $menu_choice in
+        1)
+            echo "正在重新启动 GPT Academic..."
+            docker-compose down
+            docker-compose up -d
+            echo "GPT Academic 已重新启动。"
+            ;;
+        2)
+            custom_config
+            echo "配置已修改,请重新启动 GPT Academic 以应用更改。"
+            ;;
+        3)
+            view_logs
+            ;;
+        4)
+            echo "感谢使用 GPT Academic 一键部署脚本。再见!"
+            exit 0
+            ;;
+        *)
+            echo "无效的选择。请输入 1 到 4 之间的数字。"
+            ;;
+    esac
+
+    main_menu
+}
+
+main_menu
