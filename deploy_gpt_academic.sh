@@ -664,6 +664,8 @@ function main() {
     echo -e "${GREEN}您可以随时输入 'gptadmin' 来打开管理菜单。${NC}"
 }
 
+# ...
+
 # 监听 'gptadmin' 命令
 function listen_for_gptadmin() {
     while true; do
@@ -674,8 +676,21 @@ function listen_for_gptadmin() {
     done
 }
 
+# 定义 gptadmin 函数
+gptadmin() {
+    bash "$0" menu
+}
+
+# 将 gptadmin 函数导出到当前 shell 会话
+export -f gptadmin
+
 # 运行主程序
 main
 
 # 在后台运行监听器
 listen_for_gptadmin &
+
+echo -e "${GREEN}GPT Academic 部署完成。脚本将在后台继续运行,监听 'gptadmin' 命令。${NC}"
+echo -e "${GREEN}您可以随时输入 'gptadmin' 来打开管理菜单。${NC}"
+echo -e "${YELLOW}请注意,如果你关闭当前终端会话,'gptadmin' 命令将不再可用。${NC}"
+echo -e "${YELLOW}在新的终端会话中,你需要重新运行脚本来重新定义 'gptadmin' 命令。${NC}"
