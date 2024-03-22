@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # 定义颜色变量
 RED='\033[0;31m'
@@ -8,6 +9,19 @@ BLUE='\033[0;34m'
 PURPLE='\033[0;35m'
 CYAN='\033[0;36m'
 NC='\033[0m' # No Color
+
+# 创建项目目录并进入
+function create_project_directory() {
+    echo -e "${BLUE}正在创建项目目录...${NC}"
+    if [ -d "gpt_academic" ]; then
+        echo -e "${YELLOW}项目目录已存在,直接进入...${NC}"
+    else
+        mkdir -p gpt_academic
+    fi
+    cd gpt_academic
+    echo -e "${GREEN}已进入项目目录: $(pwd)${NC}"
+    echo
+}
 
 # 显示GPT Academic的ASCII艺术字
 function display_logo() {
@@ -102,11 +116,15 @@ function install_docker_compose() {
     echo
 }
 
-# 创建项目目录并进入
-function create_and_enter_project_directory() {
+function create_project_directory() {
     echo -e "${BLUE}正在创建项目目录...${NC}"
-    mkdir -p gpt_academic
-    cd gpt_academic
+    if [ -d "gpt_academic" ]; then
+        echo -e "${YELLOW}项目目录已存在,直接进入...${NC}"
+        cd gpt_academic
+    else
+        mkdir -p gpt_academic
+        cd gpt_academic
+    fi
     echo -e "${GREEN}已进入项目目录: $(pwd)${NC}"
     echo
 }
@@ -584,11 +602,27 @@ function main_menu() {
     done
 }
 
+# 添加快捷命令
+function add_shortcut_command() {
+    script_path=$(realpath "$0")
+    script_dir=$(dirname "$script_path")
+    shortcut_file="$HOME/.gptadmin_shortcut"
+
+    echo "alias gptadmin='cd $script_dir/gpt_academic && bash $script_path'" > "$shortcut_file"
+
+    if ! grep -q "source $shortcut_file" "$HOME/.bashrc"; then
+        echo "source $shortcut_file" >> "$HOME/.bashrc"
+    fi
+
+    source "$HOME/.bashrc"
+    echo -e "${GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
+}
+
 # 主程序
 function main() {
+    create_project_directory
     display_logo
-    create_and_enter_project_directory
-    check_docker_compose
+    check_existing_deployment
     if [ $? -eq 0 ]; then
         update_system_packages
         install_docker
@@ -600,8 +634,7 @@ function main() {
         start_gpt_academic
     fi
     main_menu
+    add_shortcut_command
 }
 
 main
-
-echo 'alias gptadmin="cd (pwd) && bash gpt_academic_admin.sh"' >> ~/.bashrc source ~/.bashrc echo -e "{GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
