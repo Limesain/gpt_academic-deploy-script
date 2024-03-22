@@ -370,16 +370,31 @@ function check_container_status() {
     echo
 }
 
-# 查看运行日志
 function view_logs() {
-    echo -e "${BLUE}正在查看 GPT Academic 的运行日志,按 Ctrl+C 退出...${NC}"
+    echo -e "${BLUE}正在查看 GPT Academic 的运行日志,按 ESC 返回主菜单...${NC}"
     echo -e "${YELLOW}注意: 如果日志显示不完整,请尝试调整终端窗口大小。${NC}"
     echo -e "${CYAN}========== GPT Academic 运行日志 ==========${NC}"
-    docker-compose logs -f --tail 100
+
+    tput sc
+    docker-compose logs --no-log-prefix -f --tail 100 &
+    LOG_PID=$!
+
+    while true; do
+        tput rc
+        tput ed
+        echo -en "${YELLOW}按 ESC 返回主菜单...${NC}"
+        read -s -n1 key
+        if [[ $key == $'\e' ]]; then
+            kill $LOG_PID
+            break
+        fi
+    done
+
     echo -e "${CYAN}========== 日志查看结束 ==========${NC}"
     echo -e "${BLUE}按任意键返回主菜单...${NC}"
-    read -n 1
-    echo
+    read -n1
+    clear
+    main_menu
 }
 
 # 备份配置文件
@@ -602,27 +617,30 @@ function main_menu() {
     done
 }
 
-# 添加快捷命令
 function add_shortcut_command() {
     script_path=$(realpath "$0")
     script_dir=$(dirname "$script_path")
-    shortcut_file="$HOME/.gptadmin_shortcut"
 
-    echo "alias gptadmin='cd $script_dir/gpt_academic && bash $script_path'" > "$shortcut_file"
-
-    if ! grep -q "source $shortcut_file" "$HOME/.bashrc"; then
-        echo "source $shortcut_file" >> "$HOME/.bashrc"
-    fi
+    cat >> "$HOME/.bashrc" <<EOL
+gptadmin() {
+    cd "$script_dir/gpt_academic" && bash "$script_path" menu
+}
+EOL
 
     source "$HOME/.bashrc"
     echo -e "${GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
 }
 
+
 # 主程序
 function main() {
-    create_project_directory
-    display_logo
-    check_existing_deployment
+    if [[ $1 == "menu" ]]; then
+        main_menu
+    else
+        create_project_directory
+        display_logo
+        check_existing_deployment
+        
     if [ $? -eq 0 ]; then
         update_system_packages
         install_docker
