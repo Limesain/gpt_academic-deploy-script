@@ -116,7 +116,6 @@ function install_docker_compose() {
     echo
 }
 
-# 创建项目目录
 function create_project_directory() {
     echo -e "${BLUE}正在创建项目目录...${NC}"
     if [ -d "gpt_academic" ]; then
@@ -463,11 +462,33 @@ function modify_api_key() {
 # 修改多线程或请求速率
 function modify_worker_num() {
     current_worker_num=$(grep -oP 'DEFAULT_WORKER_NUM: \K\d+' docker-compose.yml)
-    echo -e "${BLUE}当前多线程数量: $current_worker_num${NC}"
+    if [[ $current_worker_num -eq 3 ]]; then
+        rate_limit="每分钟3次(Free trial users)"
+    else
+        rate_limit="每分钟3500次(Pay-as-you-go users)"
+    fi
+    echo -e "${BLUE}当前多线程数量: $current_worker_num, 对应的速率限制: $rate_limit${NC}"
+    
     read -p "请输入新的多线程数量: " new_worker_num
     if [[ $new_worker_num =~ ^[0-9]+$ ]]; then
         sed -i "s/DEFAULT_WORKER_NUM:.*/DEFAULT_WORKER_NUM: $new_worker_num/g" docker-compose.yml
         echo -e "${GREEN}多线程数量已更新为 $new_worker_num。${NC}"
+        
+        if [[ $new_worker_num -le 3 ]]; then
+            echo -e "${YELLOW}请注意,当前设置的多线程数量对应的速率限制为每分钟3次(Free trial users)。${NC}"
+        else
+            echo -e "${YELLOW}请注意,当前设置的多线程数量对应的速率限制为每分钟3500次(Pay-as-you-go users)。${NC}"
+        fi
+        
+        read -p "是否立即重启 GPT Academic 以应用新的设置? [y/n]: " restart_choice
+        if [[ $restart_choice =~ ^[Yy]$ ]]; then
+            echo -e "${GREEN}正在重新启动 GPT Academic...${NC}"
+            docker-compose down
+            docker-compose up -d
+            echo -e "${GREEN}GPT Academic 已重新启动,新的多线程设置已生效。${NC}"
+        else
+            echo -e "${YELLOW}新的多线程设置将在下次重启 GPT Academic 时生效。${NC}"
+        fi
     else
         echo -e "${RED}无效的输入。请输入一个数字。${NC}"
     fi
@@ -618,20 +639,6 @@ function main_menu() {
     done
 }
 
-function add_shortcut_command() {
-    script_path=$(realpath "$0")
-    script_dir=$(dirname "$script_path")
-
-    cat >> "$HOME/.bashrc" <<EOL
-gptadmin() {
-    cd "$script_dir" && bash "$script_path" menu
-}
-EOL
-
-    source "$HOME/.bashrc"
-    echo -e "${GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
-}
-
 # 主程序
 function main() {
     if [[ $1 == "menu" ]]; then
@@ -652,8 +659,23 @@ function main() {
             start_gpt_academic
         fi
     fi
-    main_menu
-    add_shortcut_command
+    
+    echo -e "${GREEN}GPT Academic 部署完成。脚本将在后台继续运行,监听 'gptadmin' 命令。${NC}"
+    echo -e "${GREEN}您可以随时输入 'gptadmin' 来打开管理菜单。${NC}"
 }
 
+# 监听 'gptadmin' 命令
+function listen_for_gptadmin() {
+    while true; do
+        if [[ "$(ps -ocommand= -p $PPID)" == *"gptadmin"* ]]; then
+            main_menu
+        fi
+        sleep 1
+    done
+}
+
+# 运行主程序
 main
+
+# 在后台运行监听器
+listen_for_gptadmin &
