@@ -604,9 +604,4 @@ function main() {
 
 main
 
-# 添加快捷命令
-script_path=$(realpath "$0")
-script_dir=$(dirname "$script_path")
-echo "alias gptadmin='cd $script_dir/gpt_academic && bash $script_path'" >> ~/.bashrc
-source ~/.bashrc
-echo -e "${GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
+echo 'alias gptadmin="cd (pwd) && bash gpt_academic_admin.sh"' >> ~/.bashrc source ~/.bashrc echo -e "{GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
