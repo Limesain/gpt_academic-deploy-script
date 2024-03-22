@@ -18,7 +18,7 @@ function display_logo() {
     echo -e "${BLUE}项目地址：${NC}https://github.com/binary-husky/gpt_academic"
     echo "---"
     echo "脚本项目地址 https://github.com/Limesain/gpt_academic-deploy-script"
-    echo "当前部署脚本为1.0版 适用GPT Academi项目版本为3.73"
+    echo "当前部署脚本为"${PURPLE}1.0版${NC}" 适用GPT Academi项目版本为"${PURPLE}3.73${NC}" 测试平台为"${PURPLE}ubuntu 20.04${NC}""
     echo
 }
 
@@ -95,6 +95,10 @@ function install_docker() {
 # 验证Docker安装
 function verify_docker_installation() {
     echo -e "${BLUE}正在验证 Docker 安装...${NC}"
+    if ! sudo systemctl is-active docker >/dev/null 2>&1; then
+        echo -e "${BLUE}正在启动 Docker 服务...${NC}"
+        sudo systemctl start docker
+    fi
     if sudo systemctl is-active docker >/dev/null 2>&1; then
         echo -e "${GREEN}Docker 安装成功并正在运行。${NC}"
     else
