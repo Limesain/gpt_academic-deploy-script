@@ -1,6 +1,3 @@
-
-这是我撰写的脚本代码：
-```
 #!/bin/bash
 
 # 定义颜色变量
@@ -613,4 +610,3 @@ script_dir=$(dirname "$script_path")
 echo "alias gptadmin='cd $script_dir/gpt_academic && bash $script_path'" >> ~/.bashrc
 source ~/.bashrc
 echo -e "${GREEN}快捷命令 'gptadmin' 已添加,可以在终端输入 'gptadmin' 快速打开管理菜单。${NC}"
-```
