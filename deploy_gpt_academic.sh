@@ -116,6 +116,7 @@ function install_docker_compose() {
     echo
 }
 
+# 创建项目目录
 function create_project_directory() {
     echo -e "${BLUE}正在创建项目目录...${NC}"
     if [ -d "gpt_academic" ]; then
