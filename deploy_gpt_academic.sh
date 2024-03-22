@@ -642,15 +642,16 @@ function main() {
         display_logo
         check_existing_deployment
         
-    if [ $? -eq 0 ]; then
-        update_system_packages
-        install_docker
-        verify_docker_installation
-        install_docker_compose
-        select_deployment_scheme
-        add_api_key
-        redirect_url
-        start_gpt_academic
+        if [ $? -eq 0 ]; then
+            update_system_packages
+            install_docker
+            verify_docker_installation
+            install_docker_compose
+            select_deployment_scheme
+            add_api_key
+            redirect_url
+            start_gpt_academic
+        fi
     fi
     main_menu
     add_shortcut_command
